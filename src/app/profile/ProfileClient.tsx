@@ -321,36 +321,20 @@ function ProfileContent() {
           <div className="w-full h-full bg-gradient-to-br from-konmik-primary/40 to-purple-900/40"></div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-konmik-darker via-konmik-darker/50 to-transparent"></div>
-        {/* Top Right Actions */}
-        <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-10 flex items-center gap-3">
-          {/* Full Profile Button */}
-          <a 
-            href={`https://m.konkon.id/profile?u=${encodeURIComponent(targetUsername)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-konmik-primary/80 hover:bg-konmik-primary backdrop-blur-md border border-white/20 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-[0_4px_15px_rgba(179,136,255,0.4)] hover:scale-105"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            Lihat Profile Lengkap
-          </a>
-
-          {/* Share Button */}
-          <button 
-            onClick={() => {
-              const shareUrl = `${window.location.origin}/profile?u=${encodeURIComponent(targetUsername)}`;
-              navigator.clipboard.writeText(shareUrl);
-              showToast("Tautan profil disalin!", "success");
-            }}
-            className="bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] hover:scale-105"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            Bagikan
-          </button>
-        </div>
+        {/* Share Button */}
+        <button 
+          onClick={() => {
+            const shareUrl = `${window.location.origin}/profile?u=${encodeURIComponent(targetUsername)}`;
+            navigator.clipboard.writeText(shareUrl);
+            showToast("Tautan profil disalin!", "success");
+          }}
+          className="absolute top-6 right-6 sm:top-8 sm:right-8 z-10 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] hover:scale-105"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          Bagikan
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-24 sm:-mt-32">
