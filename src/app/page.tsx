@@ -82,29 +82,6 @@ export default function Home() {
           </span>
         </div>
 
-        {/* CTA ghost button */}
-        <div className="relative z-10">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 border border-white/15 hover:border-white/30 text-gray-300 hover:text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Jelajahi Tanpa Login
-          </Link>
-        </div>
       </div>
 
       {/* ── RIGHT LOGIN PANEL ─────────────────────────────────────────── */}
