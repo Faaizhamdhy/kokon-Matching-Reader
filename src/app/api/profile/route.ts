@@ -56,10 +56,9 @@ export async function GET(request: Request) {
       }));
     }
 
-    // Fallback for Minutes and created_at from statsData
-    if (metricsData.total_minutes === undefined) {
-      metricsData.total_minutes = statsData.minutes || 0;
-    }
+    // Always prioritize statsData.minutes over metricsData to match the mobile app's calculation
+    metricsData.total_minutes = statsData.minutes || 0;
+
     if (!metricsData.created_at) {
       metricsData.created_at = statsData.created_at || '';
     }
