@@ -26,10 +26,16 @@ export async function generateMetadata(
     if (stats && stats.created_at) {
       const displayName = stats.display_name || username;
       const title = `${displayName} | KonMik Profile`;
+      
+      const totalComics = stats.comics || stats.comics_read || 0;
+      const totalChapters = stats.chapters || stats.chapters_read || 0;
+      
       let description = `Lihat statistik membaca dari ${displayName} di KonMik! `;
-      if (stats.total_comics) {
-        description += `Membaca ${stats.total_comics} komik dengan total ${stats.total_chapters} chapter.`;
+      if (totalComics > 0) {
+        description += `Membaca ${totalComics} komik dengan total ${totalChapters} chapter.`;
       }
+      
+      const ogImage = stats.banner_url || stats.profile_url || '/icon.png';
       
       return {
         title,
@@ -37,7 +43,7 @@ export async function generateMetadata(
         openGraph: {
           title,
           description,
-          images: [stats.profile_url || '/icon.png'],
+          images: [ogImage],
           type: 'profile',
           siteName: 'KonMik',
         },
@@ -45,7 +51,7 @@ export async function generateMetadata(
           card: 'summary_large_image',
           title,
           description,
-          images: [stats.profile_url || '/icon.png'],
+          images: [ogImage],
         }
       }
     }
