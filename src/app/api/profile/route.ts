@@ -104,7 +104,9 @@ export async function GET(request: Request) {
         const dateStr = c.updated_at.replace(" ", "T") + "Z";
         const date = new Date(dateStr);
         if (!isNaN(date.getHours())) {
-          timeDistribution[date.getHours()]++;
+          // Vercel server runs in UTC. Convert the hour to WIB (UTC+7)
+          const wibHour = (date.getUTCHours() + 7) % 24;
+          timeDistribution[wibHour]++;
           totalReadEvents++;
         }
       }
