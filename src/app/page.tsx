@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 import { NativeLoginForm } from "@/components/NativeLoginForm";
+import ClientRedirect from "@/components/ClientRedirect";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col lg:flex-row">
+      <ClientRedirect />
 
       {/* ── LEFT HERO PANEL ───────────────────────────────────────────── */}
       <div className="relative lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 py-20 overflow-hidden">

@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const RadarChart = dynamic(() => import("@/components/RadarChart"), { ssr: false });
+const HourlyBarChart = dynamic(() => import("@/components/HourlyBarChart"), { ssr: false });
+const GenreBarChart = dynamic(() => import("@/components/GenreBarChart"), { ssr: false });
 
 function ProfileContent() {
   const [user, setUser] = useState<any>(null);
@@ -633,35 +635,21 @@ function ProfileContent() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Top Genres Chart */}
+              {/* Top Genres — Chart.js Horizontal Bar */}
               <div className="bg-konmik-card rounded-3xl p-6 border border-white/5 shadow-xl">
-                <h3 className="text-lg font-bold text-white mb-6">Genre Terfavorit</h3>
+                <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-konmik-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 014-4z"/></svg>
+                  Genre Terfavorit
+                </h3>
                 {metrics.top_genres.length > 0 ? (
-                  <div className="space-y-4">
-                    {metrics.top_genres.map((g: any, i: number) => (
-                      <div key={i} className="relative group">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium text-gray-200 group-hover:text-konmik-primary transition-colors">{g.name}</span>
-                          <span className="text-gray-400 text-xs bg-white/5 px-2 py-0.5 rounded-full">{g.percentage}%</span>
-                        </div>
-                        <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden shadow-inner">
-                          <div 
-                            className="bg-gradient-to-r from-purple-600 to-konmik-primary h-3 rounded-full relative overflow-hidden" 
-                            style={{ width: `${g.percentage}%` }}
-                          >
-                            <div className="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 translate-x-[-150%] group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <GenreBarChart genres={metrics.top_genres} />
                 ) : (
                   <div className="text-center text-gray-500 py-10">Belum ada data genre.</div>
                 )}
               </div>
 
-              {/* Reading Time Heatmap */}
-              <div className="bg-konmik-card rounded-3xl p-6 border border-white/5 shadow-xl flex flex-col relative">
+              {/* Jam Membaca 24H — Chart.js Bar */}
+              <div className="bg-konmik-card rounded-3xl p-6 border border-white/5 shadow-xl flex flex-col">
                 {(() => {
                   let dayCount = 0; let nightCount = 0;
                   metrics.time_distribution.forEach((c: number, h: number) => {
@@ -671,52 +659,20 @@ function ProfileContent() {
                   const total = dayCount + nightCount;
                   const dayPct = total > 0 ? Math.round((dayCount / total) * 100) : 0;
                   const nightPct = total > 0 ? 100 - dayPct : 0;
-                  
                   return (
-                    <div className="flex items-center justify-between mb-auto">
+                    <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-white">Jam Membaca (24H)</h3>
                       {total > 0 && (
-                      <div className="flex items-center gap-2 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full">
-                        <span className="text-yellow-400">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 inline" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path fill="none" stroke="currentColor" strokeWidth="2" d="M12 6v6l4 2"/></svg>
-                          {' '}{dayPct}%
-                        </span>
-                        <span className="text-gray-500">|</span>
-                        <span className="text-blue-300">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                          {' '}{nightPct}%
-                        </span>
-                      </div>
-                    )}
+                        <div className="flex items-center gap-3 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full">
+                          <span className="text-yellow-400">☀ {dayPct}%</span>
+                          <span className="text-gray-500">|</span>
+                          <span className="text-indigo-300">🌙 {nightPct}%</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
-
-                <div className="flex items-end h-40 gap-1 mt-6">
-                  {metrics.time_distribution.map((count: number, hour: number) => {
-                    const heightPercent = maxTime > 0 ? (count / maxTime) * 100 : 0;
-                    return (
-                      <div key={hour} className="flex-1 flex flex-col items-center group relative cursor-pointer h-full justify-end">
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full mb-2 bg-gray-800 border border-white/10 text-xs text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 shadow-xl">
-                          <span className="font-bold text-konmik-primary">{hour.toString().padStart(2, '0')}:00</span> - {count} komik
-                        </div>
-                        <div 
-                          className="w-full rounded-t-md transition-all duration-300 group-hover:bg-blue-400"
-                          style={{ 
-                            height: `${heightPercent}%`, 
-                            minHeight: count > 0 ? '4px' : '0',
-                            backgroundColor: count > 0 ? `rgba(59, 130, 246, ${0.4 + (count/maxTime)*0.6})` : 'transparent' 
-                          }}
-                        ></div>
-                        {/* Label every 6 hours */}
-                        <span className="text-[9px] text-gray-500 mt-2 h-4">
-                          {hour % 6 === 0 ? `${hour}h` : ''}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <HourlyBarChart timeDistribution={metrics.time_distribution} />
               </div>
             </div>
 
