@@ -222,81 +222,135 @@ export async function POST(request: Request) {
     const isRival = totalScore < 25;
 
     // ─────────────────────────────────────────────────────────────────────────
-    // V2 DYNAMIC MESSAGE ENGINE
-    // Categorize each score: Low (<40), Mid (40–69), High (>=70)
+    // V2.1 DETERMINISTIC GENERATIVE MESSAGE ENGINE
+    // Combines 5 parts based on a username hash so results are consistent but highly varied.
     // ─────────────────────────────────────────────────────────────────────────
-    const level = (s: number) => s >= 70 ? 'H' : s >= 40 ? 'M' : 'L';
-    const cL = level(comicScore);
-    const gL = level(genreScore);
-    const hL = level(habitScore);
-    const combo = `${cL}${gL}${hL}`;
-
-    const messages: Record<string, string[]> = {
-      // ── All High ──
-      'HHH': [
-        "Kecocokan Sempurna! Kalian membaca judul yang sama, genre yang sama, di jam yang sama. Seperti melihat pantulan di cermin! 🪞",
-        "Soulmate Komik sejati! Selera, kebiasaan, dan pilihan komik kalian hampir identik. Yakin belum pernah ketemu di dunia nyata? 🤝",
-        "99% kembar rasa! Dari judul, genre, sampai pola baca malam-malam — kalian dua yang sama banget. 🌟",
-      ],
-      // ── Comic & Genre High, Habit Low ──
-      'HHL': [
-        "Selera komik dan genre kalian cocok banget, tapi jam bacanya beda dunia. Satu baca dini hari, satunya lagi pas sarapan! 🌙☀️",
-        "Kalian punya wishlist komik yang hampir sama persis, tapi kayak janjian nggak pernah online bareng. Beda timezone nih! ⏰",
-        "Genre dan judul? Double match! Tapi kebiasaan baca kalian bertolak belakang. Coba sync jadwal, pasti nyambung banget! 📅",
-      ],
-      // ── Comic & Habit High, Genre Low ──
-      'HLH': [
-        "Kalian sering baca komik yang sama dan punya jam baca yang mirip, tapi genre favoritnya berbeda. Seru nih buat debat selera! ⚔️😄",
-        "Judul yang kalian baca banyak yang sama, tapi alasan milihnya beda. Satu suka actionnya, satunya suka romancenya dari komik yang sama! 🤔",
-        "Kebiasaan baca kalian klop, judulnya juga banyak yang overlap — tapi referensi genre kalian kayak kucing sama anjing. 🐱🐶",
-      ],
-      // ── Genre & Habit High, Comic Low ──
-      'LHH': [
-        "Waktu baca dan selera genre kalian nyambung banget! Sayangnya belum pernah baca komik yang sama. Kalian butuh rekomendasi satu sama lain! 📚💡",
-        "Kalian adalah dua pembaca dengan kebiasaan dan genre yang mirip, tapi entah kenapa jalur komiknya belum bersilangan. Mulai dari mana? 🗺️",
-        "Habit-mu klop, genre-mu match — sekarang tinggal temukan satu judul yang bisa kalian nikmati bersama! 🎯",
-      ],
-      // ── Comic High only ──
-      'HLL': [
-        "Banyak judul yang sama-sama dibaca, tapi di luar itu... berbeda banget! Kalian adalah pembaca yang sama-sama penasaran tapi arahnya berbeda. 🧭",
-        "Kalian punya 'buku kenangan' yang sama, tapi setelah itu jalan sendiri-sendiri. Nostalgia banget! 📖",
-        "Titik temu kalian ada di judul-judul lawas yang sama-sama pernah dibaca. Tapi genre dan jadwal bacanya beda total! ⏳",
-      ],
-      // ── Genre High only ──
-      'LHL': [
-        "Selera genre kalian sangat cocok, tapi lucunya tidak pernah membaca judul yang sama! Ini pertanda kalian harus saling rekomendasiin komik. 🎁",
-        "Kalian seperti dua kolektor dengan hobi yang sama tapi koleksi yang berbeda. Genre cocok, judul belum ketemu! 🗃️",
-        "Genre? Identik! Judul? Beda semua. Kalian pasti akan langsung jatuh cinta kalau dikasih rekomendasian dari masing-masing. 💬",
-      ],
-      // ── Habit High only ──
-      'LLH': [
-        "Teman begadang sejati! Pola dan intensitas baca kalian hampir identik, tapi selera komiknya beda 180 derajat. 🦇🌙",
-        "Kalian pasti sering online di jam yang sama, tapi baca komik yang berseberangan total. Lucu banget! 😂",
-        "Dari segi waktu dan stamina baca, kalian satu frekuensi. Tapi isi bacaannya? Kayak kamu baca sci-fi dan dia baca slice of life! 🚀🌸",
-      ],
-      // ── All Mid ──
-      'MMM': [
-        "Kecocokan yang lumayan! Kalian punya titik temu di beberapa judul, genre, dan pola baca. Ada potensi yang perlu digali lebih jauh! 🔍",
-        "Skor tengah-tengah berarti kalian punya ruang untuk jadi lebih cocok. Coba rekomendasiin komik favorit masing-masing! 📖",
-        "Tidak terlalu cocok, tidak terlalu beda. Kalian adalah dua pembaca yang bisa saling melengkapi kalau mau jajal selera baru! ✨",
-      ],
-      // ── All Low (Rival) ──
-      'LLL': [
-        "Rival Membaca Sejati! Tidak ada satu pun komik, genre, atau jam baca yang mirip. Kalian ibarat air dan minyak! ⚡",
-        "Hmm, ini kecocokan yang unik — lebih tepatnya: tidak ada kecocokan sama sekali! Mungkin itulah yang membuat kalian menarik satu sama lain? 😏",
-        "Kalian adalah definisi 'opposites attract' di dunia komik. Selera, waktu, dan pilihan judul kalian bertentangan di semua lini! 🌪️",
-      ],
+    const hashString = (str: string) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
     };
 
-    // Fallback for unmatched combos (e.g. 'HMH', 'LMH', etc.)
-    const fallback = [
-      `Kecocokan kalian cukup menarik! Judul: ${comicScore}%, Genre: ${genreScore}%, Habit: ${habitScore}%. Ada kesamaan yang perlu dijelajahi lebih lanjut. 🔎`,
-      "Kalian punya campuran yang unik — sebagian cocok, sebagian berbeda. Itulah yang bikin persahabatan seru! 🎲",
-      `Dengan skor total ${totalScore}%, kalian cukup kompatibel untuk saling bertukar rekomendasi komik! 📚`,
-    ];
+    const seed = hashString(self_username.toLowerCase() + target_username.toLowerCase());
+    const pick = (arr: string[], offset: number) => arr[(seed + offset) % arr.length];
 
-    const pool = messages[combo] || fallback;
-    const message = pool[Math.floor(Math.random() * pool.length)];
+    let msgParts: string[] = [];
+
+    // 1. Overall Intro based on Total Score
+    if (totalScore >= 90) {
+      msgParts.push(pick([
+        "Wow, sebuah keajaiban! Kalian bagaikan belahan jiwa di dunia komik.",
+        "Luar biasa! Kecocokan kalian nyaris sempurna secara statistik.",
+        "Sangat langka! Sistem kami mendeteksi resonansi yang luar biasa di antara kalian."
+      ], 1));
+    } else if (totalScore >= 70) {
+      msgParts.push(pick([
+        "Kecocokan yang sangat solid!",
+        "Kalian berdua punya banyak banget kesamaan yang menarik.",
+        "Chemistry membaca kalian sangat kuat."
+      ], 2));
+    } else if (totalScore >= 40) {
+      msgParts.push(pick([
+        "Kecocokan kalian ada di tingkat menengah.",
+        "Ada beberapa titik temu yang pas, meski tidak semuanya identik.",
+        "Kalian adalah kombinasi unik dari persamaan dan perbedaan."
+      ], 3));
+    } else {
+      msgParts.push(pick([
+        "Perbedaan kalian sangat kontras!",
+        "Kalian berada di dua kutub komik yang saling berseberangan.",
+        "Wah, sistem mendeteksi kalian sebagai Rival sejati."
+      ], 4));
+    }
+
+    // 2. Comic Part
+    if (comicScore >= 70) {
+      msgParts.push(pick([
+        "Koleksi bacaan kalian sangat tumpang tindih.",
+        "Banyak banget judul spesifik yang sama-sama kalian tamatkan.",
+        "Sepertinya kalian sering nongkrong di rak komik yang sama."
+      ], 5));
+    } else if (comicScore >= 40) {
+      msgParts.push(pick([
+        "Kalian berbagi beberapa judul komik yang sama.",
+        "Ada beberapa komik hits yang sama-sama kalian ikuti.",
+        "Meski jalur bacaannya mulai berbeda, akar judul yang kalian baca cukup mirip."
+      ], 6));
+    } else {
+      msgParts.push(pick([
+        "Uniknya, kalian nyaris tidak pernah menyentuh judul komik yang sama.",
+        "Koleksi komik kalian ibarat dua perpustakaan yang berbeda total.",
+        "Sulit mencari irisan komik di riwayat kalian."
+      ], 7));
+    }
+
+    // 3. Genre Part
+    if (genreScore >= 70) {
+      msgParts.push(pick([
+        "Terlebih lagi, selera genre kalian bagaikan pinang dibelah dua.",
+        "Kalian juga berbagi kecintaan pada genre yang sama persis.",
+        "DNA genre kalian saling bertaut dengan sangat erat."
+      ], 8));
+    } else if (genreScore >= 40) {
+      msgParts.push(pick([
+        "Di sisi genre, ada beberapa irisan selera yang masih nyambung.",
+        "Meski fokusnya beda, ada beberapa genre favorit yang kalian bagi bersama.",
+        "Selera genre kalian setengah mirip, setengahnya lagi sangat personal."
+      ], 9));
+    } else {
+      msgParts.push(pick([
+        "Namun untuk urusan genre, kalian benar-benar punya selera yang bertolak belakang.",
+        "Menariknya, referensi genre kalian tidak pernah bersilangan sama sekali.",
+        "Soal tema cerita, kalian seperti hidup di alam semesta yang berbeda."
+      ], 10));
+    }
+
+    // 4. Habit Part
+    if (habitScore >= 70) {
+      msgParts.push(pick([
+        "Ditambah lagi, pola dan waktu jam baca kalian sungguh seirama.",
+        "Dan yang bikin makin klop, kalian berdua punya jam aktif membaca yang identik.",
+        "Bahkan ritme kalian saat mengonsumsi komik pun sama persis."
+      ], 11));
+    } else if (habitScore >= 40) {
+      msgParts.push(pick([
+        "Gaya membaca kalian cukup mirip, meski intensitas waktunya agak berbeda.",
+        "Pola harian kalian masih ada kemiripan di jam-jam tertentu.",
+        "Secara habit, kalian tidak terlalu jauh berbeda."
+      ], 12));
+    } else {
+      msgParts.push(pick([
+        "Tapi kalau bicara soal habit, satu dari kalian mungkin kalong dan satunya lagi pembaca pagi.",
+        "Hanya saja, kebiasaan dan jam baca kalian sungguh tidak sinkron.",
+        "Sayangnya, ritme waktu kalian membaca sangat jauh berbeda."
+      ], 13));
+    }
+
+    // 5. Conclusion
+    if (totalScore >= 75) {
+      msgParts.push(pick([
+        "Sangat direkomendasikan untuk saling bertukar daftar rekomendasi komik!",
+        "Kalian pasti nyambung banget kalau ngobrol panjang lebar soal komik.",
+        "Sistem menobatkan kalian sebagai teman mabar komik yang sempurna."
+      ], 14));
+    } else if (totalScore >= 40) {
+      msgParts.push(pick([
+        "Coba sapa dan tukar judul, siapa tahu bisa memperluas wawasan!",
+        "Kalian bisa saling melengkapi kekurangan referensi masing-masing.",
+        "Pertemanan yang bagus untuk keluar dari zona nyaman."
+      ], 15));
+    } else {
+      msgParts.push(pick([
+        "Mungkin lebih seru kalau kalian saling debat komik mana yang terbaik!",
+        "Rivalitas ini justru bisa jadi cara asyik buat nambah perspektif baru.",
+        "Ibarat air dan minyak, tapi terkadang perbedaan itu indah."
+      ], 16));
+    }
+
+    const message = msgParts.join(" ");
 
     return NextResponse.json({
       success: true,
