@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const RadarChart = dynamic(() => import("@/components/RadarChart"), { ssr: false });
 
 function ProfileContent() {
   const [user, setUser] = useState<any>(null);
@@ -742,78 +745,23 @@ function ProfileContent() {
                   ))}
                 </div>
 
-                {/* Radar Chart SVG */}
+                {/* Radar Chart — Chart.js */}
                 {radarMatchData ? (() => {
                   const selectedRel = relationships.accepted.find((r: any) => r.id === selectedRelId) || relationships.accepted[0];
                   const selfDist = radarMatchData.self || [0, 0, 0, 0, 0];
                   const targetDist = radarMatchData.target || [0, 0, 0, 0, 0];
-                  
                   return (
-                    <div className="relative w-64 h-64 sm:w-80 sm:h-80 mb-8 mt-2">
-                      <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible">
-                        {/* Pentagon background grid */}
-                        {[1, 0.75, 0.5, 0.25].map((scale, i) => {
-                          const r = 80 * scale;
-                          const pts = [
-                            {x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}
-                          ].map(p => `${100 + p.x * r},${100 + p.y * r}`).join(" ");
-                          return <polygon key={i} points={pts} fill="none" stroke="#ffffff15" strokeWidth="1" />;
-                        })}
-                        
-                        {/* Axis lines */}
-                        {[
-                          {x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}
-                        ].map((p, i) => (
-                          <line key={i} x1="100" y1="100" x2={100 + p.x * 80} y2={100 + p.y * 80} stroke="#ffffff15" strokeWidth="1" />
-                        ))}
-
-                        {/* Labels */}
-                        <text x="100" y="10" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Pagi</text>
-                        <text x="195" y="75" fill="#9ca3af" fontSize="10" textAnchor="start" fontWeight="bold">Siang</text>
-                        <text x="155" y="195" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Sore</text>
-                        <text x="45" y="195" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Malam</text>
-                        <text x="5" y="75" fill="#9ca3af" fontSize="10" textAnchor="end" fontWeight="bold">Dini Hari</text>
-
-                        {/* Target User Polygon (Red/Pink based on type) */}
-                        <polygon 
-                          points={targetDist.map((p: number, i: number) => {
-                            const r = Math.max((p / 100) * 80, 5);
-                            const angles = [{x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}];
-                            return `${100 + angles[i].x * r},${100 + angles[i].y * r}`;
-                          }).join(" ")}
-                          fill="rgba(236, 72, 153, 0.2)" 
-                          stroke="#ec4899" 
-                          strokeWidth="2" 
-                          className="transition-all duration-1000"
-                        />
-
-                        {/* Self User Polygon (Primary/Blue) */}
-                        <polygon 
-                          points={selfDist.map((p: number, i: number) => {
-                            const r = Math.max((p / 100) * 80, 5);
-                            const angles = [{x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}];
-                            return `${100 + angles[i].x * r},${100 + angles[i].y * r}`;
-                          }).join(" ")}
-                          fill="rgba(179, 136, 255, 0.4)" 
-                          stroke="#B388FF" 
-                          strokeWidth="2" 
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      
-                      {/* Legend */}
-                      <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-6">
-                        <div className="flex items-center gap-2 text-xs text-gray-400 font-bold">
-                          <span className="w-3 h-3 rounded bg-[#B388FF] opacity-60"></span> Kamu
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400 font-bold">
-                          <span className="w-3 h-3 rounded bg-pink-500 opacity-60"></span> {selectedRel.display_name}
-                        </div>
-                      </div>
+                    <div className="w-full max-w-xs sm:max-w-sm mb-4 mt-2">
+                      <RadarChart
+                        selfData={selfDist}
+                        targetData={targetDist}
+                        selfLabel="Kamu"
+                        targetLabel={selectedRel.display_name}
+                      />
                     </div>
                   );
                 })() : (
-                  <div className="relative w-64 h-64 sm:w-80 sm:h-80 mb-8 mt-2 flex items-center justify-center">
+                  <div className="w-full max-w-xs h-64 mb-4 mt-2 flex items-center justify-center">
                     <div className="w-10 h-10 border-2 border-konmik-primary/30 border-t-konmik-primary rounded-full animate-spin" />
                   </div>
                 )}

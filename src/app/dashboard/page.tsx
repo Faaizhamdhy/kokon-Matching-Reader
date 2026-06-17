@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const RadarChart = dynamic(() => import("@/components/RadarChart"), { ssr: false });
+const DoughnutChart = dynamic(() => import("@/components/DoughnutChart"), { ssr: false });
 
 // ===== SVG Icons =====
 const IconClock = () => (
@@ -309,29 +313,14 @@ export default function DashboardPage() {
                             })()}
                           </div>
 
-                          {/* Donut Chart */}
-                          <div className="relative w-44 h-44 sm:w-52 sm:h-52 flex-shrink-0">
-                            <svg viewBox="0 0 160 160" className="w-full h-full -rotate-90 drop-shadow-2xl">
-                              <circle cx="80" cy="80" r="60" fill="none" stroke="#ffffff06" strokeWidth="16"/>
-                              <circle cx="80" cy="80" r="60" fill="none" stroke="#3b82f6" strokeWidth="16"
-                                strokeDasharray={`${((matchResult.score_breakdown?.habit || 0) / 100) * 377} 377`}
-                                strokeDashoffset={-((((matchResult.score_breakdown?.genre || 0) + (matchResult.score_breakdown?.comic || 0)) / 100) * 377)}
-                                strokeLinecap="round" className="transition-all duration-[2000ms] ease-out"/>
-                              <circle cx="80" cy="80" r="60" fill="none" stroke="#10b981" strokeWidth="16"
-                                strokeDasharray={`${((matchResult.score_breakdown?.comic || 0) / 100) * 377} 377`}
-                                strokeDashoffset={-(((matchResult.score_breakdown?.genre || 0) / 100) * 377)}
-                                strokeLinecap="round" className="transition-all duration-[1500ms] ease-out"/>
-                              <circle cx="80" cy="80" r="60" fill="none" stroke={matchResult.is_rival ? "#ef4444" : "#a855f7"} strokeWidth="16"
-                                strokeDasharray={`${((matchResult.score_breakdown?.genre || 0) / 100) * 377} 377`}
-                                strokeDashoffset="0"
-                                strokeLinecap="round" className="transition-all duration-[1000ms] ease-out"/>
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <span className={`text-4xl sm:text-5xl font-black ${matchResult.is_rival ? 'text-red-400' : 'text-white'}`}>
-                                {matchResult.score || 0}%
-                              </span>
-                            </div>
-                          </div>
+                          {/* Doughnut Chart - Chart.js */}
+                          <DoughnutChart
+                            genre={matchResult.score_breakdown?.genre || 0}
+                            comic={matchResult.score_breakdown?.comic || 0}
+                            habit={matchResult.score_breakdown?.habit || 0}
+                            score={matchResult.score || 0}
+                            isRival={matchResult.is_rival}
+                          />
 
                           {/* Target User Card */}
                           <div className="flex flex-col items-end gap-2 bg-konmik-dark/90 p-3 rounded-2xl border border-white/8 w-full sm:w-auto sm:min-w-[150px] sm:max-w-[190px] overflow-hidden relative">
@@ -410,69 +399,18 @@ export default function DashboardPage() {
                       ))}
                     </div>
 
-                    {/* Reading Time Comparison (Radar Chart) */}
-                    <div className="bg-konmik-dark border border-white/5 rounded-xl p-4 my-4 flex flex-col items-center">
-                      <h4 className="text-xs text-gray-600 uppercase tracking-widest font-semibold flex items-center gap-2 mb-2 w-full">
+                    {/* Radar Chart - Chart.js */}
+                    <div className="bg-konmik-dark border border-white/5 rounded-xl p-4 my-4">
+                      <h4 className="text-xs text-gray-600 uppercase tracking-widest font-semibold flex items-center gap-2 mb-1 w-full">
                         <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"/> Distribusi Waktu Baca
                       </h4>
-                      <p className="text-[10px] text-gray-500 mb-4 w-full">Radar kebiasaan membaca: <span className="text-blue-400 font-bold">Kamu</span> vs <span className="text-red-400 font-bold">{matchResult.target_user?.display_name || targetUsername}</span></p>
-                      
-                      <div className="relative w-64 h-64">
-                        <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible">
-                          {/* Pentagon background grid */}
-                          {[1, 0.75, 0.5, 0.25].map((scale, i) => {
-                            const r = 80 * scale;
-                            const pts = [
-                              {x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}
-                            ].map(p => `${100 + p.x * r},${100 + p.y * r}`).join(" ");
-                            return <polygon key={i} points={pts} fill="none" stroke="#ffffff15" strokeWidth="1" />;
-                          })}
-                          
-                          {/* Axis lines */}
-                          {[
-                            {x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}
-                          ].map((p, i) => (
-                            <line key={i} x1="100" y1="100" x2={100 + p.x * 80} y2={100 + p.y * 80} stroke="#ffffff15" strokeWidth="1" />
-                          ))}
-
-                          {/* Labels */}
-                          <text x="100" y="10" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Pagi</text>
-                          <text x="195" y="75" fill="#9ca3af" fontSize="10" textAnchor="start" fontWeight="bold">Siang</text>
-                          <text x="155" y="195" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Sore</text>
-                          <text x="45" y="195" fill="#9ca3af" fontSize="10" textAnchor="middle" fontWeight="bold">Malam</text>
-                          <text x="5" y="75" fill="#9ca3af" fontSize="10" textAnchor="end" fontWeight="bold">Dini Hari</text>
-
-                          {/* Target User Polygon (Red) */}
-                          {matchResult.habit?.target_time_dist && (
-                            <polygon 
-                              points={matchResult.habit.target_time_dist.map((p: number, i: number) => {
-                                const r = Math.max((p / 100) * 80, 5);
-                                const angles = [{x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}];
-                                return `${100 + angles[i].x * r},${100 + angles[i].y * r}`;
-                              }).join(" ")}
-                              fill="rgba(239, 68, 68, 0.2)" 
-                              stroke="#ef4444" 
-                              strokeWidth="2" 
-                              className="transition-all duration-1000"
-                            />
-                          )}
-
-                          {/* Self User Polygon (Blue) */}
-                          {matchResult.habit?.self_time_dist && (
-                            <polygon 
-                              points={matchResult.habit.self_time_dist.map((p: number, i: number) => {
-                                const r = Math.max((p / 100) * 80, 5);
-                                const angles = [{x: 0, y: -1}, {x: 0.951, y: -0.309}, {x: 0.588, y: 0.809}, {x: -0.588, y: 0.809}, {x: -0.951, y: -0.309}];
-                                return `${100 + angles[i].x * r},${100 + angles[i].y * r}`;
-                              }).join(" ")}
-                              fill="rgba(59, 130, 246, 0.4)" 
-                              stroke="#3b82f6" 
-                              strokeWidth="2" 
-                              className="transition-all duration-1000"
-                            />
-                          )}
-                        </svg>
-                      </div>
+                      <p className="text-[10px] text-gray-500 mb-3 w-full">Radar kebiasaan membaca: <span className="text-blue-400 font-bold">Kamu</span> vs <span className="text-red-400 font-bold">{matchResult.target_user?.display_name || targetUsername}</span></p>
+                      <RadarChart
+                        selfData={matchResult.habit?.self_time_dist || [0,0,0,0,0]}
+                        targetData={matchResult.habit?.target_time_dist || [0,0,0,0,0]}
+                        selfLabel="Kamu"
+                        targetLabel={matchResult.target_user?.display_name || targetUsername}
+                      />
                     </div>
 
                     {/* Common Genres & Comics */}
